@@ -8,16 +8,16 @@ import guru.springframework.brewery.services.BeerService;
 import guru.springframework.brewery.web.model.BeerDto;
 import guru.springframework.brewery.web.model.BeerPagedList;
 import guru.springframework.brewery.web.model.BeerStyleEnum;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
@@ -34,23 +34,27 @@ import java.util.UUID;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.reset;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.hamcrest.core.Is.is;
-@ExtendWith(MockitoExtension.class)
+@WebMvcTest(BeerController.class)
 class BeerControllerTest {
 
-    @Mock
+    @MockBean
     BeerService beerService;
 
-    @InjectMocks
-    BeerController beerController;
-
+    @Autowired
     MockMvc mockMvc;
 
     BeerDto validBeer;
+
+    @AfterEach
+    void tearDown() {
+        reset(beerService);
+    }
 
     @BeforeEach
     void setUp(){
@@ -65,8 +69,6 @@ class BeerControllerTest {
                 .lastModifiedDate(OffsetDateTime.now())
                 .build();
 
-        mockMvc = MockMvcBuilders.standaloneSetup(beerController)
-                .setMessageConverters(jackson2HttpMessageConverter()).build();
     }
 
     @Test
@@ -137,13 +139,5 @@ class BeerControllerTest {
 
         }
     }
-    public MappingJackson2HttpMessageConverter jackson2HttpMessageConverter(){
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-        mapper.configure(SerializationFeature.WRITE_DATE_TIMESTAMPS_AS_NANOSECONDS, true);
-        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
-        mapper.registerModule(new JavaTimeModule());
-        return new MappingJackson2HttpMessageConverter(mapper);
-    }
 }
